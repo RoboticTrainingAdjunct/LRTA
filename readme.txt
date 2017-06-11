@@ -1,21 +1,34 @@
 
-CHAI3D-WoodenHaptics branch (work in progress)
+CHAI3D-WoodenHaptics-Robotic Teaching Adjunct
 ------------------------------------------------
 
 Quick installation instructions:
  1. Install Ubuntu 16.04
  2. Install the proprietary nvidia graphics drivers via the "additional driver" tool
  3. sudo apt install git
- 4. git clone https://github.com/forsslund/chai3d.git
+ 4. git clone https://github.com/RoboticTrainingAdjunct/LRTA.git
  5. sudo apt install libhidapi-dev libudev-dev libusb-1.0-0-dev libasound2-dev freeglut3-dev \
     build-essential cmake libudev-dev libxcursor-dev libxrandr-dev libxinerama-dev \
     qt5-default 
  6. cd chai3d
  7. cmake .
  8. make -j5
+ 
+Config Files:
+1. woodenhapticsArm0.json
+2. woodenhapticsArm1.json
+3. teaching_device.json
+4. make sure these files are in your home directory before running.
 
-Examples are then found in bin/
-
+Usage instructions:
+1. cd bin
+2. cd lin-x86_64
+3. sudo ./RTA-Build
+4. enter your trajectory name
+5. collect data
+6. repeat steps 3-5 until enough runs are taken
+7. sudo ./RTA-Track
+8. track your trajectory
 
 
 
