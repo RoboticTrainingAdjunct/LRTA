@@ -52,6 +52,7 @@
 #include <chrono>
 #include <thread>
 #include <vector>
+#include <string>
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -190,6 +191,9 @@ public:
 
     //! Read the position of the device. Units are meters [m].
     virtual bool getPosition(cVector3d& a_position);
+    
+    //! Read the position of the device. Units are meters [m].
+    virtual bool getPosition(cVector3d& a_position, bool updatePos);
 
     //! Read the orientation frame of the device handle.
     virtual bool getRotation(cMatrix3d& a_rotation);
@@ -220,9 +224,12 @@ public:
     //! Returns the number of devices available from this class of device.
     static unsigned int getNumDevices();
 
-
     //! A collection of variables that can be set in ~/wooden_haptics.json 
     struct configuration {
+		double offset_angle;            // rad (orientation of base)
+		double angle_1;                 // rad (angle of base from default "front facing")
+		double angle_2;                 // rad (angle of link 2 from default "upright")
+		double angle_3;                 // rad (angle of link 3 from default "straight")
         double variant;                 // 0=WoodenHaptics default, 1=AluHaptics
         double diameter_capstan_a;      // m
         double diameter_capstan_b;      // m
@@ -266,7 +273,8 @@ public:
           current_for_10_v_signal(k[17]), cpr_encoder_a(k[18]), cpr_encoder_b(k[19]),
           cpr_encoder_c(k[20]), max_linear_force(k[21]), max_linear_stiffness(k[22]),
           max_linear_damping(k[23]), mass_body_b(k[24]), mass_body_c(k[25]),
-          length_cm_body_b(k[26]), length_cm_body_c(k[27]), g_constant(k[28]){}
+          length_cm_body_b(k[26]), length_cm_body_c(k[27]), g_constant(k[28]), 
+		  angle_1(k[29]), angle_2(k[30]), angle_3(k[31]), offset_angle(k[32]){}
 
         configuration(){}
     };
@@ -286,9 +294,10 @@ public:
     ////////////////////////////////////////////////////////////////////////////
 
     int lost_messages;
+    int deviceNumber = 0;
 
 protected:
-
+	
     const configuration m_config;
 
     cVector3d torqueSignals;

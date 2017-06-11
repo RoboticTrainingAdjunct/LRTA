@@ -44,6 +44,7 @@
 //------------------------------------------------------------------------------
 #include "system/CGlobals.h"
 #include "devices/CWoodenDevice.h"
+#include <string>
 
 // Following includes are only used for reading/writing config file and to find 
 // the user's home directory (where the config file will be stored)
@@ -123,8 +124,6 @@ namespace chai3d {
 
 
 
-
-
 std::string toJSON(const woodenhaptics_message& m) {
     std::stringstream ss;
     ss << "{" << std::endl <<
@@ -156,12 +155,13 @@ cWoodenDevice::configuration default_woody(){
                       0.220, 0.000, 0.080, 0.100, 
                       0.0259, 0.0259, 0.0259, 3.0, 2000, 2000, 2000,
                       5.0, 1000.0, 8.0,
-                      0.170, 0.110, 0.051, 0.091, 0};
+                      0.170, 0.110, 0.051, 0.091, 9.81, 0, 0, 0, 0};
     return cWoodenDevice::configuration(data); 
 }
 
 double v(const std::string& json, const std::string& key){
     int p = json.find(":", json.find(key));
+	
     return atof(json.substr(p+1).c_str());
 }
 
@@ -195,7 +195,11 @@ cWoodenDevice::configuration fromJSON(std::string json){
         v(json,"mass_body_c"),
         v(json,"length_cm_body_b"),
         v(json,"length_cm_body_c"),
-        v(json,"g_constant")       
+        v(json,"g_constant"),
+		v(json,"angle_1"),
+		v(json,"angle_2"),
+		v(json,"angle_3"),
+		v(json,"offset_angle")
     }; 
     return cWoodenDevice::configuration(d);
 }
@@ -240,35 +244,39 @@ std::string toJSON(const cWoodenDevice::configuration& c){
         << j("length_cm_body_b",c.length_cm_body_b)
         << j("length_cm_body_c",c.length_cm_body_c)
         << j("g_constant",c.g_constant)
+        << j("angle_1",c.angle_1)
+        << j("angle_2",c.angle_2)
+        << j("angle_3",c.angle_3)
+        << j("offset_angle",c.offset_angle)
         << "}" << endl;
    return json.str();
 }
 
-void write_config_file(const cWoodenDevice::configuration& config){
+void write_config_file(const cWoodenDevice::configuration& config, unsigned int number){
     const char *homedir;
     if ((homedir = getenv("HOME")) == NULL) {
         homedir = getpwuid(getuid())->pw_dir;
     }
 
     std::cout << "Writing configuration to: "<< homedir 
-              << "/woodenhaptics.json" << std::endl;
+              << "/woodenhapticsArm" << std::to_string(number) <<".json" << std::endl;
     std::ofstream ofile;
-    ofile.open(std::string(homedir) + "/woodenhaptics.json");
+    ofile.open(std::string(homedir) + "/woodenhapticsArm" + std::to_string(number) + ".json");
     ofile << toJSON(config);
     ofile.close();
 }
 
-cWoodenDevice::configuration read_config_file(){
+cWoodenDevice::configuration read_config_file( unsigned int number ){
     const char *homedir;
     if ((homedir = getenv("HOME")) == NULL) {
         homedir = getpwuid(getuid())->pw_dir;
     }
 
     std::cout << "Trying loading configuration from: "<< homedir 
-              << "/woodenhaptics.json" << std::endl;
+              << "/woodenhapticsArm" << std::to_string(number) <<".json" << std::endl;
 
     std::ifstream ifile;
-    ifile.open(std::string(homedir) + "/woodenhaptics.json");
+    ifile.open(std::string(homedir) + "/woodenhapticsArm" + std::to_string(number) + ".json");
     if(ifile.is_open()){
         std::stringstream buffer;
         buffer << ifile.rdbuf();
@@ -279,7 +287,7 @@ cWoodenDevice::configuration read_config_file(){
         std::cout << "File not found. We will write one "
                   << "based on default configuration values." << std::endl;
 
-        write_config_file(default_woody());
+        write_config_file(default_woody(), number);
         return default_woody();
     }
 }
@@ -293,7 +301,7 @@ cWoodenDevice::configuration read_config_file(){
 */
 //==============================================================================
 cWoodenDevice::cWoodenDevice(unsigned int a_deviceNumber): 
-    m_config(read_config_file())
+    m_config(read_config_file(deviceNumber = a_deviceNumber))
 {
     // the connection to your device has not yet been established.
     m_deviceReady = false;
@@ -581,7 +589,16 @@ bool cWoodenDevice::open()
 
     // Open the device using the VID, PID,
     // and optionally the Serial number.
-    handle = hid_open(0x1234, 0x6, NULL);
+	if (deviceNumber == 1)
+	{
+		handle = hid_open(0x1234, 0x6, L"0123456789");
+		std::cout << "Device 1" << std::endl;
+	}
+	else if (deviceNumber == 0)
+	{
+		handle = hid_open(0x1234, 0x6, L"9876543210");
+		std::cout << "Device 0" << std::endl;		
+	}
     if (!handle) {
         printf("unable to open device. Is it plugged in and you run as root?\n");
         //return 1;
@@ -819,7 +836,7 @@ unsigned int cWoodenDevice::getNumDevices()
 
     // *** INSERT YOUR CODE HERE, MODIFY CODE BELLOW ACCORDINGLY ***
 
-    int numberOfDevices = 1;  // At least set to 1 if a device is available.
+    int numberOfDevices = 2;  // At least set to 1 if a device is available.
 
     // numberOfDevices = getNumberOfDevicesConnectedToTheComputer();
 
@@ -896,7 +913,11 @@ pose calculate_pose(const cWoodenDevice::configuration& c, double* encoder_value
     double dofAngle[3];
 #ifdef USB
     for(int i=0;i<3;i++)
+    {
         dofAngle[i] = (2.0*pi*encoder_values[i]/cpr[i]) / gearRatio[i];
+        //std::cout << " " << std::to_string(dofAngle[i]);
+    }
+    //std::cout << std::endl;
 #else
     for(int i=0;i<3;i++)
         dofAngle[i] = getMotorAngle(i,cpr[i]) / gearRatio[i];
@@ -909,14 +930,17 @@ pose calculate_pose(const cWoodenDevice::configuration& c, double* encoder_value
         dofAngle[2] = dofAngle[2];
     }
 
+
+	dofAngle[1] = -dofAngle[1];
+	dofAngle[2] = -dofAngle[2];
     // Calculate dof angles (theta) for each body
     p.Ln = c.length_body_a; 
     p.Lb = c.length_body_b; 
     p.Lc = c.length_body_c; 
-    p.tA = dofAngle[0];
-    p.tB = dofAngle[1];
+    p.tA = dofAngle[0] + c.angle_1;
+    p.tB = dofAngle[1] + c.angle_2;
     //p.tC = dofAngle[2] - dofAngle[1];
-    p.tC = dofAngle[2]; // 2016-05-30
+    p.tC = dofAngle[2] + c.angle_3; // 2016-05-30
 
     return p;
 }
@@ -935,6 +959,12 @@ double deg(double rad){
 */
 //==============================================================================
 bool cWoodenDevice::getPosition(cVector3d& a_position)
+{
+	return getPosition( a_position, true );
+}
+
+
+bool cWoodenDevice::getPosition(cVector3d& a_position, bool updatePos)
 {
     ////////////////////////////////////////////////////////////////////////////
     /*
@@ -1005,7 +1035,7 @@ bool cWoodenDevice::getPosition(cVector3d& a_position)
     };
     */
 
-    if(handle){
+    if(updatePos && handle){
 
         int res=0;
         while (res == 0) {
@@ -1074,9 +1104,11 @@ bool cWoodenDevice::getPosition(cVector3d& a_position)
     else
         tC = -tC + 3.141592/2;
 
-    x = cos(tA)*(Lb*sin(tB)+Lc*sin(tC))    - m_config.workspace_origin_x;
-    y = sin(tA)*(Lb*sin(tB)+Lc*sin(tC)) - m_config.workspace_origin_y;
-    z = Ln+Lb*cos(tB)-Lc*cos(tC) - m_config.workspace_origin_z;
+    x = cos(m_config.offset_angle)*cos(tA)*(Lb*sin(tB)+Lc*sin(tC)) - sin(m_config.offset_angle)*sin(tA)*(Lb*sin(tB)+Lc*sin(tC)) + m_config.workspace_origin_x;
+    y = sin(m_config.offset_angle)*cos(tA)*(Lb*sin(tB)+Lc*sin(tC)) + cos(m_config.offset_angle)*sin(tA)*(Lb*sin(tB)+Lc*sin(tC)) + m_config.workspace_origin_y;
+    z = Ln+Lb*cos(tB)-Lc*cos(tC) + m_config.workspace_origin_z;
+	
+
 
 
 /*
@@ -1393,15 +1425,20 @@ bool cWoodenDevice::setForceAndTorqueAndGripperForce(const cVector3d& a_force,
         x-axis.
     */
     ////////////////////////////////////////////////////////////////////////////
+    cVector3d force;
+	double fx, fy;
+	fx =  a_force(0)*cos(m_config.offset_angle) + a_force(1)*sin(m_config.offset_angle);
+	fy = -a_force(0)*sin(m_config.offset_angle) + a_force(1)*cos(m_config.offset_angle);
+	force.x(fx); force.y(fy); force.z(a_force.z());
+	
+    latest_force = force;
 
-    latest_force = a_force;
 
 
-
-    //if(a_force.length()>0.0001){
+    //if(force.length()>0.0001){
 
 #ifdef SAVE_LOG
-        forces.push_back(a_force);
+        forces.push_back(force);
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         double duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start_of_app).count();
         timestamp.push_back(duration_us);
@@ -1413,7 +1450,7 @@ bool cWoodenDevice::setForceAndTorqueAndGripperForce(const cVector3d& a_force,
     bool result = C_SUCCESS;
 
     // store new force value.
-    m_prevForce = a_force;
+    m_prevForce = force;
     m_prevTorque = a_torque;
     m_prevGripperForce = a_gripperForce;
 
@@ -1483,7 +1520,7 @@ else
                         0,                           -Lb*sin(tB),           Lc*sin(tC)     );
 
 
-    cVector3d f=a_force;
+    cVector3d f=force;
     //f += cVector3d(-0.2,0,0);
     cVector3d t=cTranspose(J)*f;
 

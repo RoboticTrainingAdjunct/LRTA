@@ -79,6 +79,10 @@
 #if defined(C_ENABLE_CUSTOM_DEVICE_SUPPORT)
 #include "devices/CMyCustomDevice.h"
 #endif
+
+#if defined(C_ENABLE_TEACHING_DEVICE_SUPPORT)
+#include "devices/CTeachingDevice.h"
+#endif
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -239,6 +243,25 @@ void cHapticDeviceHandler::update()
     for (int i=0; i<count; i++)
     {
         device = cWoodenDevice::create(i);
+        m_devices[m_numDevices] = device;
+        m_numDevices++;
+    }
+
+    #endif
+	
+    //--------------------------------------------------------------------------
+    // search for Teacjing Device
+    //--------------------------------------------------------------------------
+    #if defined(C_ENABLE_TEACHING_DEVICE_SUPPORT)
+
+    // check for how many devices are available for this class of devices
+    // (Note however that WoodenDevice will currently always return 1 device.
+    count = cTeachingDevice::getNumDevices();
+
+    //  open all remaining devices
+    for (int i=0; i<count; i++)
+    {
+        device = cTeachingDevice::create(i);
         m_devices[m_numDevices] = device;
         m_numDevices++;
     }

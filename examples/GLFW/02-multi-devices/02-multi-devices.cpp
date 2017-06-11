@@ -301,8 +301,8 @@ int main(int argc, char* argv[])
     world->addChild(camera);
 
     // position and orient the camera
-    camera->set( cVector3d(0.5, 0.0, 0.0),    // camera position (eye)
-                 cVector3d(0.0, 0.0, 0.0),    // look at position (target)
+    camera->set( cVector3d(0.0, 0.0, 0.375),    // camera position (eye)
+                 cVector3d(1.0, 0.0, 0.375),    // look at position (target)
                  cVector3d(0.0, 0.0, 1.0));   // direction of the (up) vector
 
     // set the near and far clipping planes of the camera
@@ -736,7 +736,7 @@ void updateHaptics(void)
                 // compute linear force
                 double Kp = 25; // [N/m]
                 cVector3d forceField = Kp * (desiredPosition - position);
-                force.add(forceField);
+                //force.add(forceField);
 
                 // compute angular torque
                 double Kr = 0.05; // [N/m.rad]
@@ -744,7 +744,7 @@ void updateHaptics(void)
                 double angle;
                 cMatrix3d deltaRotation = cTranspose(rotation) * desiredRotation;
                 deltaRotation.toAxisAngle(axis, angle);
-                torque = rotation * ((Kr * angle) * axis);
+                //torque = rotation * ((Kr * angle) * axis);
             }
     
             // apply damping term
@@ -755,16 +755,16 @@ void updateHaptics(void)
                 // compute linear damping force
                 double Kv = 1.0 * info.m_maxLinearDamping;
                 cVector3d forceDamping = -Kv * linearVelocity;
-                force.add(forceDamping);
+                //force.add(forceDamping);
 
                 // compute angular damping force
                 double Kvr = 1.0 * info.m_maxAngularDamping;
                 cVector3d torqueDamping = -Kvr * angularVelocity;
-                torque.add(torqueDamping);
+                //torque.add(torqueDamping);
 
                 // compute gripper angular damping force
                 double Kvg = 1.0 * info.m_maxGripperAngularDamping;
-                gripperForce = gripperForce - Kvg * gripperAngularVelocity;
+                //gripperForce = gripperForce - Kvg * gripperAngularVelocity;
             }
 
             // send computed force, torque, and gripper force to haptic device

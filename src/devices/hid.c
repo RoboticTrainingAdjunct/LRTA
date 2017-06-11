@@ -21,6 +21,8 @@
         http://github.com/signal11/hidapi .
 ********************************************************/
 
+#define _GNU_SOURCE
+
 /* C */
 #include <stdio.h>
 #include <string.h>
@@ -36,6 +38,8 @@
 #include <sys/utsname.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 /* Linux */
 #include <linux/hidraw.h>
@@ -673,24 +677,29 @@ int HID_API_EXPORT hid_write(hid_device *dev, const unsigned char *data, size_t 
 }
 
 
-int HID_API_EXPORT hid_read_timeout(hid_device *dev, unsigned char *data, size_t length, int milliseconds)
+int HID_API_EXPORT hid_read_timeout(hid_device *dev, unsigned char *data, size_t length, int nanoseconds)
 {
 	int bytes_read;
 
-	if (milliseconds >= 0) {
+	if (nanoseconds >= 0) {
 		/* Milliseconds is either 0 (non-blocking) or > 0 (contains
 		   a valid timeout). In both cases we want to call poll()
 		   and wait for data to arrive.  Don't rely on non-blocking
 		   operation (O_NONBLOCK) since some kernels don't seem to
 		   properly report device disconnection through read() when
 		   in non-blocking mode.  */
+		   
 		int ret;
 		struct pollfd fds;
+		struct timespec tv;
 
 		fds.fd = dev->device_handle;
 		fds.events = POLLIN;
 		fds.revents = 0;
-		ret = poll(&fds, 1, milliseconds);
+		tv.tv_sec = 0;
+		tv.tv_nsec = nanoseconds;
+		
+		ret = ppoll(&fds, 1, &tv, NULL);
 		if (ret == -1 || ret == 0) {
 			/* Error or timeout */
 			return ret;
@@ -701,6 +710,8 @@ int HID_API_EXPORT hid_read_timeout(hid_device *dev, unsigned char *data, size_t
 			if (fds.revents & (POLLERR | POLLHUP | POLLNVAL))
 				return -1;
 		}
+			
+		
 	}
 
 	bytes_read = read(dev->device_handle, data, length);
