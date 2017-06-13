@@ -42,6 +42,19 @@ Usage instructions:
 7. sudo ./RTA-Track
 8. track your trajectory
 
+Software Additions
+///////////////////////////
+Source Files
+1. Put .cpp and .h into relevant folders within src
+2. run cmake .
+///////////////////////////
+Main Files (executable)
+1. Create folder in examples/GLFW, name it the same as the main file.
+2. Put main file in said folder
+3. Add folder name to CMakeLists foreach function (the CMakeLists in the GLFW folder)
+///////////////////////////
+
+
 Questions?
 Email alex.bertino@yahoo.com
 
