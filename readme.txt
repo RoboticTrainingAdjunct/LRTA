@@ -46,7 +46,7 @@ Questions?
 Email alex.bertino@yahoo.com
 
 Original WoodenHaptics API extension software can be found at https://github.com/WoodenHaptics/TEI_2015/
-
+WoodenHaptics software written by Jonas Forsslund, KTH, 2014-12-08
 
 
 
