@@ -32,7 +32,7 @@ Usage instructions:
 8. track your trajectory
 
 
-
+Original WoodenHaptics API extension software can be found at https://github.com/WoodenHaptics/TEI_2015/
 
 
 
