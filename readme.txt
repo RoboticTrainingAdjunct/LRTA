@@ -1,5 +1,6 @@
 
 CHAI3D-WoodenHaptics-Robotic Teaching Adjunct
+Software Designer: Alex Bertino
 ------------------------------------------------
 
 Quick installation instructions:
