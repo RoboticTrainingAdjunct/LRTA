@@ -21,6 +21,17 @@ Config Files:
 3. teaching_device.json
 4. make sure these files are in your home directory before running.
 
+Microcontroller Code:
+1. Find in microcontroller folder
+2. armA is the arm with the higher attachment point, armB is the lower
+3. Connect each microcontroller to pc
+4. Drag and drop the .bin file into the micorocontroller
+5. Press microcontroller reset button
+6. Microcontroller ready!
+7. Microcontroller info avaliable at https://developer.mbed.org/platforms/mbed-LPC1768/
+8. Microcontroller code avaliable at https://developer.mbed.org/users/jofo/code/WoodenHapticsHID/
+9. The serial number of armA is '9876543210', armB is '0123456789'
+
 Usage instructions:
 1. cd bin
 2. cd lin-x86_64
@@ -31,6 +42,8 @@ Usage instructions:
 7. sudo ./RTA-Track
 8. track your trajectory
 
+Questions?
+Email alex.bertino@yahoo.com
 
 Original WoodenHaptics API extension software can be found at https://github.com/WoodenHaptics/TEI_2015/
 
