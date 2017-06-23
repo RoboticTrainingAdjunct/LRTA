@@ -1104,10 +1104,16 @@ bool cWoodenDevice::getPosition(cVector3d& a_position, bool updatePos)
     else
         tC = -tC + 3.141592/2;
 
-    x = cos(m_config.offset_angle)*cos(tA)*(Lb*sin(tB)+Lc*sin(tC)) - sin(m_config.offset_angle)*sin(tA)*(Lb*sin(tB)+Lc*sin(tC)) + m_config.workspace_origin_x;
-    y = sin(m_config.offset_angle)*cos(tA)*(Lb*sin(tB)+Lc*sin(tC)) + cos(m_config.offset_angle)*sin(tA)*(Lb*sin(tB)+Lc*sin(tC)) + m_config.workspace_origin_y;
+    x = cos(m_config.offset_angle)*(cos(tA)*(Lb*sin(tB)+Lc*sin(tC)) - 0.015384*sin(tA)) - sin(m_config.offset_angle)*(sin(tA)*(Lb*sin(tB)+Lc*sin(tC)) + 0.015384*cos(tA)) + m_config.workspace_origin_x;
+    y = sin(m_config.offset_angle)*(cos(tA)*(Lb*sin(tB)+Lc*sin(tC)) - 0.015384*sin(tA)) + cos(m_config.offset_angle)*(sin(tA)*(Lb*sin(tB)+Lc*sin(tC)) + 0.015834*cos(tA)) + m_config.workspace_origin_y;
     z = Ln+Lb*cos(tB)-Lc*cos(tC) + m_config.workspace_origin_z;
 	
+	/*
+	if ( (deviceNumber == 0) && updatePos)
+	{
+		std::cout << "Angles: " << std::to_string(tA * 180 / pi) << " " << std::to_string(tB * 180 / pi) << " " << std::to_string(tC * 180 / pi) << endl;
+	}
+	*/
 
 
 
